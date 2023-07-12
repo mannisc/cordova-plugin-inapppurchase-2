@@ -490,27 +490,22 @@ public class IabHelper implements PurchasesUpdatedListener {
 
                 for(ProductDetails productDetails: productDetailsList) {
                     if(sku.equals(productDetails.getProductId())) {
-                        int selectedOfferIndex = 0; // Always the first one for us
-                        String offerToken="";
-                        List<ProductDetails.SubscriptionOfferDetails> subscriptionDetails = productDetails
-                            .getSubscriptionOfferDetails();
-                        if (subscriptionDetails!=null){
-                            offerToken = subscriptionDetails
-                              .get(selectedOfferIndex)
-                              .getOfferToken();
-                         }
-                        ProductDetailsParams.Builder builder = ProductDetailsParams.newBuilder();
-                        builder.setProductDetails(productDetails);
-                        if (offerToken != "") {
-                           builder.setOfferToken(offerToken);
-                        }
-
-
+						//UPDATED BY MANNISC
+/*                       
+					   int selectedOfferIndex = 0; // Always the first one for us
+                        String offerToken = productDetails
+                           .getSubscriptionOfferDetails()
+                           .get(selectedOfferIndex)
+                           .getOfferToken();
+*/
                         List<ProductDetailsParams> productDetailsParamsList =
-                        List.of(
-                          builder
-                          .build()
-                        );
+                            List.of(
+                                ProductDetailsParams.newBuilder()
+                                    .setProductDetails(productDetails)
+                                    //.setOfferToken(offerToken)
+                                    .build()
+                            );
+
                         BillingFlowParams billingFlowParams = BillingFlowParams.newBuilder()
                             .setProductDetailsParamsList(productDetailsParamsList)
                             .build();
@@ -587,7 +582,8 @@ public class IabHelper implements PurchasesUpdatedListener {
                             public void onQueryAllPurchasesFinished(List<IabPurchase> iabPurchases) {
                                 Log.d(TAG, "onQueryAllPurchasesFinished: " + iabPurchases);
                                 try {
-                                    if (queryIabSkuDetails) {
+                                    //UPDATED BY MANNISC : &&iabPurchases.size()>0 
+                                    if (queryIabSkuDetails&&iabPurchases.size()>0) {
                                         OnQueryIabSkuDetailsFinishedListener detailsListener = new OnQueryIabSkuDetailsFinishedListener() {
 
                                             protected boolean subsProcessed = false;

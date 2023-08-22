@@ -582,8 +582,7 @@ public class IabHelper implements PurchasesUpdatedListener {
                             public void onQueryAllPurchasesFinished(List<IabPurchase> iabPurchases) {
                                 Log.d(TAG, "onQueryAllPurchasesFinished: " + iabPurchases);
                                 try {
-                                    //UPDATED BY MANNISC : &&iabPurchases.size()>0 
-                                    if (queryIabSkuDetails&&iabPurchases.size()>0) {
+                                    if (queryIabSkuDetails) {
                                         OnQueryIabSkuDetailsFinishedListener detailsListener = new OnQueryIabSkuDetailsFinishedListener() {
 
                                             protected boolean subsProcessed = false;
@@ -948,32 +947,39 @@ public class IabHelper implements PurchasesUpdatedListener {
             }
         }
 
-        QueryProductDetailsParams productDetailsParams = QueryProductDetailsParams.newBuilder()
-            .setProductList(productList)
-            .build();
+        ////UPDATED BY MANNISC
+        if(productList.size()==0){
+            ArrayList<IabSkuDetails> iabSkuDetailsList = new ArrayList<IabSkuDetails>();
+            listener.onQueryIabSkuDetailsFinished(iabSkuDetailsList, itemType);
+        }else {
+            QueryProductDetailsParams productDetailsParams = QueryProductDetailsParams.newBuilder()
+                    .setProductList(productList)
+                    .build();
 
-        ProductDetailsResponseListener productDetailsListener = new ProductDetailsResponseListener() {
-            public void onProductDetailsResponse(BillingResult billingResult, List<ProductDetails> productDetailsList) {
-                Log.d(TAG, "onPDR: " + billingResult + " " + productDetailsList);
+            ProductDetailsResponseListener productDetailsListener = new ProductDetailsResponseListener() {
+                public void onProductDetailsResponse(BillingResult billingResult, List<ProductDetails> productDetailsList) {
+                    Log.d(TAG, "onPDR: " + billingResult + " " + productDetailsList);
 
-                ArrayList<IabSkuDetails> iabSkuDetailsList = new ArrayList<IabSkuDetails>();
+                    ArrayList<IabSkuDetails> iabSkuDetailsList = new ArrayList<IabSkuDetails>();
 
-                for(ProductDetails productDetails: productDetailsList) {
-                  Log.d(TAG, "onPDR item: " + productDetails);
-                  IabSkuDetails iabSkuDetails = new IabSkuDetails(itemType, productDetails);
-                  Log.d(TAG, "onPDR isd origin: " + iabSkuDetails);
-                  inv.addIabSkuDetails(iabSkuDetails);
-                  iabSkuDetailsList.add(iabSkuDetails);
+                    for (ProductDetails productDetails : productDetailsList) {
+                        Log.d(TAG, "onPDR item: " + productDetails);
+                        IabSkuDetails iabSkuDetails = new IabSkuDetails(itemType, productDetails);
+                        Log.d(TAG, "onPDR isd origin: " + iabSkuDetails);
+                        inv.addIabSkuDetails(iabSkuDetails);
+                        iabSkuDetailsList.add(iabSkuDetails);
+                    }
+                    Log.d(TAG, "onPDR: " + iabSkuDetailsList);
+
+                    listener.onQueryIabSkuDetailsFinished(iabSkuDetailsList, itemType);
                 }
-                Log.d(TAG, "onPDR: " + iabSkuDetailsList);
+            };
 
-                listener.onQueryIabSkuDetailsFinished(iabSkuDetailsList, itemType);
-            }
-        };
+            billingClient.queryProductDetailsAsync(
+                    productDetailsParams,
+                    productDetailsListener);
 
-        billingClient.queryProductDetailsAsync(
-          productDetailsParams,
-          productDetailsListener);
+        }
 
         return BILLING_RESPONSE_RESULT_OK;
     }
